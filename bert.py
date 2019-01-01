@@ -183,9 +183,11 @@ class BertModel(object):
             with tf.variable_scope("encoder"):
                 # Run the stacked transformer.
                 # `sequence_output` shape = [batch_size, seq_length, hidden_size].
+                attention_mask = transformer.create_attention_mask_from_input_mask(
+                    input_ids, input_mask)
                 self.sequence_output = transformer.transformer_encoder(
                     input_tensor=self.embedding_output,
-                    attention_mask=input_mask,
+                    attention_mask=attention_mask,
                     hidden_size=config.hidden_size,
                     num_encoder_layers=config.num_hidden_layers,
                     num_attention_heads=config.num_attention_heads,
