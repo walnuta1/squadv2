@@ -336,7 +336,7 @@ def convert_squad_data_file_to_tf_record_file(
         max_seq_length=max_seq_length,
         doc_stride=doc_stride,
         max_query_length=max_query_length,
-        is_training=True,
+        is_training=is_training,
         output_fn=train_writer.process_feature)
     train_writer.close()
     return len(examples), train_writer.num_features
