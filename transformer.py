@@ -52,7 +52,7 @@ def multiheaded_attention(
     query_shape = query.shape.as_list()
     key_shape = key.shape.as_list()
     value_shape = value.shape.as_list()
-    batch_size = query_shape[0]
+    batch_size = tf.shape(query)[0]  # batch_size is a dynamic shape param
     query_seq_len = query_shape[1]
     key_seq_len = key_shape[1]
     embedding_size = value_shape[2]
