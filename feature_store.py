@@ -294,6 +294,7 @@ class FeatureWriter(object):
             return feature
 
         features = collections.OrderedDict()
+        features["example_index"] = create_int_feature([feature.example_index])
         features["unique_ids"] = create_int_feature([feature.unique_id])
         features["input_ids"] = create_int_feature(feature.input_ids)
         features["input_mask"] = create_int_feature(feature.input_mask)
