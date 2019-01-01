@@ -157,7 +157,7 @@ def create_model(bert_config, is_training, input_ids, input_mask, segment_ids,
     final_hidden = model.get_sequence_output()
 
     final_hidden_shape = final_hidden.shape.as_list()
-    batch_size = final_hidden_shape[0]
+    batch_size = tf.shape(final_hidden)[0] # use dynamic shape for batch_size
     seq_length = final_hidden_shape[1]
     hidden_size = final_hidden_shape[2]
 
