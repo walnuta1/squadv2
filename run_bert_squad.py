@@ -714,6 +714,7 @@ def main(_):
                 max_seq_length=FLAGS.max_seq_length,
                 doc_stride=FLAGS.doc_stride,
                 max_query_length=FLAGS.max_query_length,
+                is_version_2_with_negative=FLAGS.version_2_with_negative
             )
             num_examples = len(examples)
             num_features = len(features)
@@ -768,7 +769,8 @@ def main(_):
             tokenizer=tokenizer,
             max_seq_length=FLAGS.max_seq_length,
             doc_stride=FLAGS.doc_stride,
-            max_query_length=FLAGS.max_query_length
+            max_query_length=FLAGS.max_query_length,
+            is_version_2_with_negative=FLAGS.version_2_with_negative
         )
         num_examples = len(eval_examples)
         num_features = len(eval_features)
