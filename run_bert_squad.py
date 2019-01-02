@@ -706,7 +706,7 @@ def main(_):
     num_warmup_steps = None
     if FLAGS.do_train:
         train_record_file = os.path.join(FLAGS.output_dir, "train.tf_record")
-        if not os.path.isfile(train_record_file):
+        if not tf.gfile.Exists(train_record_file):
             tf.logging.info("***** Converting training examples *****")
             examples, features = feature_store.convert_squad_data_file_to_tf_record_file(
                 FLAGS.train_file, True, train_record_file,
