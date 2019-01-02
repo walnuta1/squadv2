@@ -322,12 +322,6 @@ def convert_squad_data_file_to_tf_record_file(
     ):
     """To convert a SQuAD data file to an TF example file"""
 
-    output_features = []
-    def my_output_fn(feature_writer, feature):
-        output_features.append(feature)
-        if feature_writer is not None:
-            feature_writer.process_feature(feature)
-
     examples = squad_reader.read_squad_examples(
         input_file=squad_file, is_training=is_training,
         is_version_2_with_negative=is_version_2_with_negative)
@@ -338,6 +332,10 @@ def convert_squad_data_file_to_tf_record_file(
     rng.shuffle(examples)
     train_writer = FeatureWriter(
         filename=output_file, is_training=is_training)
+    output_features = []
+    def my_output_fn(feature):
+        output_features.append(feature)
+        train_writer.process_feature(feature)
     convert_examples_to_features(
         examples=examples,
         tokenizer=tokenizer,
