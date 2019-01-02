@@ -321,6 +321,13 @@ def convert_squad_data_file_to_tf_record_file(
         doc_stride=128, is_version_2_with_negative=False
     ):
     """To convert a SQuAD data file to an TF example file"""
+
+    output_features = []
+    def my_output_fn(feature_writer, feature):
+        output_features.append(feature)
+        if feature_writer is not None:
+            feature_writer.process_feature(feature)
+
     examples = squad_reader.read_squad_examples(
         input_file=squad_file, is_training=is_training,
         is_version_2_with_negative=is_version_2_with_negative)
@@ -338,9 +345,9 @@ def convert_squad_data_file_to_tf_record_file(
         doc_stride=doc_stride,
         max_query_length=max_query_length,
         is_training=is_training,
-        output_fn=train_writer.process_feature)
+        output_fn=my_output_fn)
     train_writer.close()
-    return len(examples), train_writer.num_features
+    return examples, output_features
 
 def get_tf_record_count(input_file):
     """Counts the total number tf records in a file"""

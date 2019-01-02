@@ -16,7 +16,6 @@ import tensorflow as tf
 import bert
 import optimization
 import tokenization
-import squad_reader
 import feature_store
 
 flags = tf.flags # pylint: disable=C0103, C0302
@@ -338,7 +337,7 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
 
     example_index_to_features = collections.defaultdict(list)
     for feature in all_features:
-        example_index_to_features[feature.features.feature["example_index"].int64_list.value[0]].append(feature)
+        example_index_to_features[feature.example_index].append(feature)
 
     unique_id_to_result = {}
     for result in all_results:
@@ -709,13 +708,15 @@ def main(_):
         train_record_file = os.path.join(FLAGS.output_dir, "train.tf_record")
         if not os.path.isfile(train_record_file):
             tf.logging.info("***** Converting training examples *****")
-            num_examples, num_features = feature_store.convert_squad_data_file_to_tf_record_file(
+            examples, features = feature_store.convert_squad_data_file_to_tf_record_file(
                 FLAGS.train_file, True, train_record_file,
                 tokenizer=tokenizer,
                 max_seq_length=FLAGS.max_seq_length,
                 doc_stride=FLAGS.doc_stride,
                 max_query_length=FLAGS.max_query_length,
             )
+            num_examples = len(examples)
+            num_features = len(features)
             tf.logging.info("    Num orig examples = %d", num_examples)
             tf.logging.info("    Num split examples = %d", num_features)
         else:
@@ -761,31 +762,23 @@ def main(_):
 
     if FLAGS.do_predict:
         eval_record_file = os.path.join(FLAGS.output_dir, "eval.tf_record")
-        if not os.path.isfile(eval_record_file):
-            tf.logging.info("***** Converting eval examples *****")
-            num_examples, num_features = feature_store.convert_squad_data_file_to_tf_record_file(
-                FLAGS.predict_file, False, eval_record_file,
-                tokenizer=tokenizer,
-                max_seq_length=FLAGS.max_seq_length,
-                doc_stride=FLAGS.doc_stride,
-                max_query_length=FLAGS.max_query_length,
-            )
-            tf.logging.info("    Num orig examples = %d", num_examples)
-            tf.logging.info("    Num split examples = %d", num_features)
-        else:
-            num_features = feature_store.get_tf_record_count(eval_record_file)
-
-        eval_examples = squad_reader.read_squad_examples(
-            input_file=FLAGS.predict_file, is_training=False,
-            is_version_2_with_negative=FLAGS.version_2_with_negative)
-        eval_features = feature_store.get_all_features(eval_record_file)
+        tf.logging.info("***** Converting eval examples *****")
+        eval_examples, eval_features = feature_store.convert_squad_data_file_to_tf_record_file(
+            FLAGS.predict_file, False, eval_record_file,
+            tokenizer=tokenizer,
+            max_seq_length=FLAGS.max_seq_length,
+            doc_stride=FLAGS.doc_stride,
+            max_query_length=FLAGS.max_query_length
+        )
+        num_examples = len(eval_examples)
+        num_features = len(eval_features)
+        tf.logging.info("    Num orig examples = %d", num_examples)
+        tf.logging.info("    Num split examples = %d", num_features)
 
         tf.logging.info("***** Running predictions *****")
         tf.logging.info("    Num orig examples = %d", len(eval_examples))
         tf.logging.info("    Num split examples = %d", len(eval_features))
         tf.logging.info("    Batch size = %d", FLAGS.predict_batch_size)
-
-        all_results = []
 
         predict_input_fn = input_fn_builder(
             input_file=eval_record_file,
