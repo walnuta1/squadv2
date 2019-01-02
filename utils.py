@@ -99,7 +99,8 @@ def word_embedding_lookup(input_ids,
         shape=[vocab_size, embedding_size],
         initializer=tf.truncated_normal_initializer(stddev=initializer_range))
     if use_one_hot_embeddings:
-        input_shape = tf.shape(input_ids)
+        input_shape = input_ids.shape.as_list()
+        input_shape[0] = tf.shape(input_ids)[0] # batch_size is dynamic
         flat_input_ids = tf.reshape(input_ids, [-1])
         one_hot_input_ids = tf.one_hot(flat_input_ids, depth=vocab_size)
         output = tf.matmul(one_hot_input_ids, embedding_table)
