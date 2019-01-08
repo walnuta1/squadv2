@@ -295,7 +295,7 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
                 logit_labels, depth=logit_depth, dtype=tf.float32)
             log_probs = tf.nn.log_softmax(logits, axis=-1)
             loss = -tf.reduce_sum(one_hot_positions * log_probs, axis=-1)
-            return loss, tf.argmax(log_probs, axis=-1)
+            return loss, tf.argmax(log_probs, axis=-1, output_type=tf.int32)
 
         answerable_loss, _ = compute_loss(answerable_logits, is_impossible, 2)
         start_pos_loss, start_pos_predict = compute_loss(
