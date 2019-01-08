@@ -199,7 +199,6 @@ def transformer_encoder(input_tensor,
                 intermediate_output = tf.layers.dense(
                     intermediate_output,
                     embedding_size,
-                    activation=intermediate_act_fn,
                     name="dense_out",
                     kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
                 )
