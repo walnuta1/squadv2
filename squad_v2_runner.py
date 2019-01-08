@@ -798,8 +798,6 @@ def main(_):
                 predict_input_fn, yield_single_examples=True):
             if len(all_results) % 1000 == 0:
                 tf.logging.info("Processing example: %d" % (len(all_results)))
-            if len(all_results) > 50:
-                break
             unique_id = int(result["unique_ids"])
             answerable_logits = [float(x) for x in result["answerable_logits"].flat]
             start_logits = [float(x) for x in result["start_logits"].flat]
