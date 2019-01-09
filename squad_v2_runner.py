@@ -201,6 +201,11 @@ tf.flags.DEFINE_integer(
     "The maximum number of tokens for the question. Questions longer than "
     "this will be truncated to this length.")
 
+tf.flags.DEFINE_bool(
+    "verbose_logging", False,
+    "If true, all of the warnings related to data processing will be printed. "
+    "A number of warnings are expected for a normal SQuAD evaluation.")
+
 FLAGS = tf.flags.FLAGS
 
 def model_function(features, labels, mode, params):    # pylint: disable=unused-argument
