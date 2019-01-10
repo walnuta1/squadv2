@@ -8,6 +8,7 @@ import utils
 def squad_v2_decoder(
         sequence_output,
         input_mask,
+        segment_ids,
         embedding_size=768,
         dropout_prob=0.1,
         initializer_range=0.2
@@ -22,13 +23,16 @@ def squad_v2_decoder(
         sequence_output: the sequence of vector embeddings
                          from the nlp_encoder.
         input_mask: the mask indicating valid input tokens.
+        segment_ids: the segment ids. Zero for question
+                     tokens and one for text tokens.
         embedding_size: the size of embedding vectors.
         dropout_prob: the dropout probability.
         initializer_range: the range for normal truncated init.
     Returns:
         A touple of (is_answerable, start_pos, end_pos).
     """
-    adder = (1.0 - tf.cast(input_mask, tf.float32)) * -10000.0
+    adder = (1.0 - tf.cast(input_mask, tf.float32)) * \
+            (1.0 - tf.cast(segment_ids, tf.float32)) * -10000.0
 
     # First get the pooler output
     with tf.variable_scope("pooler"):

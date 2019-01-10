@@ -248,6 +248,7 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
     answerable_logits, start_pos_logits, end_pos_logits = model_decoder.squad_v2_decoder(
         sequence_output,
         input_mask,
+        segment_ids,
         embedding_size=FLAGS.embedding_size,
         dropout_prob=dropout_prob,
         initializer_range=FLAGS.initializer_range
