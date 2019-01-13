@@ -45,8 +45,7 @@ def squad_v2_decoder(
         expanded_weights = tf.broadcast_to(
             output_weights,
             (tf.shape(sequence_output)[0], 1, embedding_size))
-        attention_mask = transformer.create_attention_mask_from_input_mask(
-            sequence_output, input_mask)
+        attention_mask = tf.expand_dims(input_mask, axis=1)
         pooled_output, _ = transformer.multiheaded_attention(
             expanded_weights, sequence_output, sequence_output, attention_mask,
             hidden_size=1024,
