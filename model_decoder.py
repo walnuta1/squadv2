@@ -4,6 +4,7 @@ A question and answer decoder model.
 import tensorflow as tf
 
 import utils
+import transformer
 
 def squad_v2_decoder(
         sequence_output,
@@ -38,7 +39,20 @@ def squad_v2_decoder(
     with tf.variable_scope("pooler"):
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token. We assume that this has been pre-trained
-        pooled_output = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
+        output_weights = tf.get_variable(
+            "output_selector", [1, 1, embedding_size],
+            initializer=tf.truncated_normal_initializer(stddev=initializer_range))
+        expanded_weights = tf.broadcast_to(
+            output_weights,
+            (tf.shape(sequence_output)[0], 1, embedding_size))
+        pooled_output, _ = transformer.multiheaded_attention(
+            expanded_weights, sequence_output, sequence_output, input_mask,
+            hidden_size=1024,
+            head_count=16,
+            dropout_prob=dropout_prob,
+            initializer_range=initializer_range
+        )
+        pooled_output = tf.reshape(pooled_output, [-1, embedding_size])
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
