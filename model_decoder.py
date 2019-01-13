@@ -38,12 +38,7 @@ def squad_v2_decoder(
     with tf.variable_scope("pooler"):
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token. We assume that this has been pre-trained
-        first_token_tensor = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
-        pooled_output = tf.layers.dense(
-            first_token_tensor,
-            embedding_size,
-            activation=tf.tanh,
-            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range))
+        pooled_output = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
