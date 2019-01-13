@@ -107,7 +107,7 @@ def multiheaded_attention(
         mask = tf.expand_dims(mask, axis=[1])
         # The original masks have 1 for valid positions and 0 for
         # invalid positions, the transformed adder would have
-        # value 0 for valie position and -10000 for invalid positions.
+        # value 0 for valid position and -10000 for invalid positions.
         adder = (1.0 - tf.cast(mask, tf.float32)) * (-10000.0)
         attention_scores += adder
 
