@@ -45,7 +45,7 @@ def squad_v2_decoder(
         answerable_logits = tf.layers.dense(
             utils.dropout(pooled_output, dropout_prob=dropout_prob),
             2,
-            activation=utils.get_activation("gelu"),
+            activation=utils.get_activation("relu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
         )
 
