@@ -4,7 +4,6 @@ A question and answer decoder model.
 import tensorflow as tf
 
 import utils
-import transformer
 
 def squad_v2_decoder(
         sequence_output,
@@ -46,7 +45,7 @@ def squad_v2_decoder(
         answerable_logits = tf.layers.dense(
             utils.dropout(pooled_output, dropout_prob=dropout_prob),
             2,
-            activation=utils.get_activation("relu"),
+            activation=utils.get_activation("gelu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
         )
 
