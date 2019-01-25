@@ -367,12 +367,18 @@ def main():
     f1_thresh = apply_no_ans_threshold(f1_raw, na_probs, qid_to_has_ans,
                                        OPTS.na_prob_thresh)
     out_eval = make_eval_dict(exact_thresh, f1_thresh)
+    out_eval_no_na_prob = make_eval_dict(exact_raw, f1_raw)
+    merge_eval(out_eval, out_eval_no_na_prob, "NoNaProb")
     if has_ans_qids:
         has_ans_eval = make_eval_dict(exact_thresh, f1_thresh, qid_list=has_ans_qids)
+        has_ans_eval_no_na_prob = make_eval_dict(exact_raw, f1_raw, qid_list=has_ans_qids)
         merge_eval(out_eval, has_ans_eval, 'HasAns')
+        merge_eval(out_eval, has_ans_eval_no_na_prob, 'HasAnsNoNaProb')
     if no_ans_qids:
         no_ans_eval = make_eval_dict(exact_thresh, f1_thresh, qid_list=no_ans_qids)
+        no_ans_eval_no_na_prob = make_eval_dict(exact_raw, f1_raw, qid_list=no_ans_qids)
         merge_eval(out_eval, no_ans_eval, 'NoAns')
+        merge_eval(out_eval, no_ans_eval_no_na_prob, 'NoAnsNoNaProb')
     if OPTS.na_prob_file:
         find_all_best_thresh(out_eval, preds, exact_raw, f1_raw, na_probs, qid_to_has_ans)
     if OPTS.na_prob_file and OPTS.out_image_dir:

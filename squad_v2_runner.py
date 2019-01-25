@@ -656,10 +656,10 @@ def write_predictions(eval_examples, eval_features, all_results,
 
         assert len(nbest) >= 1
 
-        if nbest[0].na_prob >= FLAGS.na_prob_threshold:
-            all_predictions[example.qas_id] = ""
-        else:
-            all_predictions[example.qas_id] = nbest[0].text
+        #if nbest[0].na_prob >= FLAGS.na_prob_threshold:
+            #all_predictions[example.qas_id] = ""
+        #else:
+        all_predictions[example.qas_id] = nbest[0].text
         all_nbest_json[example.qas_id] = nbest
         na_probs_json[example.qas_id] = nbest[0].na_prob
 
