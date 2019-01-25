@@ -661,7 +661,7 @@ def write_predictions(eval_examples, eval_features, all_results,
         else:
             all_predictions[example.qas_id] = nbest[0].text
         all_nbest_json[example.qas_id] = nbest
-        na_probs_json[example.qas_id] = FLAGS.na_prob_threshold
+        na_probs_json[example.qas_id] = nbest[0].na_prob
 
     with tf.gfile.GFile(output_prediction_file, "w") as writer:
         writer.write(json.dumps(all_predictions, indent=4) + "\n")
