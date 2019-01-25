@@ -22,12 +22,12 @@ OPTS = None
 
 def parse_args():
     """To parse arguements"""
-    parser = argparse.ArgumentParser('Official evaluation script for SQuAD version 2.0.')
+    parser = argparse.ArgumentParser('Adapted official evaluation script for SQuAD version 2.0.')
     parser.add_argument('data_file', metavar='data.json', help='Input data JSON file.')
     parser.add_argument('pred_file', metavar='pred.json', help='Model predictions.')
     parser.add_argument('--out-file', '-o', metavar='eval.json',
                         help='Write accuracy metrics to file (default is stdout).')
-    parser.add_argument('--analysis-file-suffix', '-a', metavar='-analysis',
+    parser.add_argument('--analysis-file-suffix', '-a', metavar='analysis',
                         help='Suffix of the file names for anlysis (na-wrong, ' \
                         'answer-not-exact, answer-exact).')
     parser.add_argument('--na-prob-file', '-n', metavar='na_prob.json',
@@ -304,9 +304,9 @@ def dump_analysis_info(file_name_suffix, dataset, has_ans_qids, no_ans_qids,
                                     if na_probs[k] < na_prob_thresh]
     # Not answerable questions
     no_answer_predict_no_answer = [k for k in no_ans_qids \
-                                    if na_probs[k] < na_prob_thresh]
-    no_answer_predict_having_answer = [k for k in no_ans_qids \
                                     if na_probs[k] >= na_prob_thresh]
+    no_answer_predict_having_answer = [k for k in no_ans_qids \
+                                    if na_probs[k] < na_prob_thresh]
     # Answer quality
     has_answer_predict_exact_match = [k for k in has_ans_qids \
                                     if na_probs[k] < na_prob_thresh and \
@@ -387,7 +387,7 @@ def main():
         print(json.dumps(out_eval, indent=2))
     if OPTS.analysis_file_suffix:
         dump_analysis_info(
-            OPTS.analysis_file_suffix,
+            '-' + OPTS.analysis_file_suffix,
             dataset, has_ans_qids, no_ans_qids,
             preds, na_probs, OPTS.na_prob_thresh,
             exact_raw, f1_raw
