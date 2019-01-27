@@ -301,17 +301,16 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
                 logit_labels, depth=logit_depth, dtype=tf.float32)
             log_probs = tf.nn.log_softmax(logits, axis=-1)
             loss = -tf.reduce_sum(one_hot_positions * log_probs, axis=-1)
-            return loss, tf.argmax(log_probs, axis=-1, output_type=tf.int32)
+            return loss
 
-        answerable_loss, _ = compute_loss(answerable_logits, is_impossible, 2)
-        start_pos_loss, _ = compute_loss(
+        answerable_loss = compute_loss(answerable_logits, is_impossible, 2)
+        start_pos_loss = compute_loss(
             start_pos_logits, start_position, seq_length)
-        end_pos_loss, _ = compute_loss(end_pos_logits, end_position, seq_length)
+        end_pos_loss = compute_loss(end_pos_logits, end_position, seq_length)
 
         total_loss = math.log(FLAGS.max_seq_length / 2.0) \
                     * FLAGS.answerability_weight * answerable_loss + \
-            (1.0 - tf.cast(is_impossible, tf.float32)) * \
-                (start_pos_loss + end_pos_loss)
+                    (start_pos_loss + end_pos_loss)
         final_total_loss = tf.reduce_mean(total_loss)
 
         train_op = optimization.create_optimizer(
