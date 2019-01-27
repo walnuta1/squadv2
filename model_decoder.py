@@ -40,15 +40,6 @@ def squad_v2_decoder(
         # to the first token. We assume that this has been pre-trained
         pooled_output = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
 
-    # Predict answerability from the pooler output
-    with tf.variable_scope("answerable"):
-        answerable_logits = tf.layers.dense(
-            utils.dropout(pooled_output, dropout_prob=dropout_prob),
-            2,
-            activation=utils.get_activation("relu"),
-            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
-        )
-
     # From the pooler output, predict a vector whose dot products with the sequence
     # produce the start positional logits
     with tf.variable_scope("start_pos"):
@@ -68,8 +59,8 @@ def squad_v2_decoder(
     # position logits
     with tf.variable_scope("end_pos"):
         end_pos_vector = tf.layers.dense(
-            utils.dropout(tf.concat([pooled_output, start_pos_vector], axis=-1),\
-                            dropout_prob=dropout_prob),
+            utils.dropout(tf.concat([pooled_output, start_pos_vector], axis=-1),
+                          dropout_prob=dropout_prob),
             embedding_size,
             activation=utils.get_activation("relu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
@@ -78,5 +69,16 @@ def squad_v2_decoder(
         end_pos_logits = tf.matmul(end_pos_vector_expand, sequence_output, transpose_b=True)
         end_pos_logits = tf.squeeze(end_pos_logits, axis=[1])
         end_pos_logits += adder
+
+    # Predict answerability from the pooler output, start position and end position
+    with tf.variable_scope("answerable"):
+        answerable_logits = tf.layers.dense(
+            utils.dropout(
+                tf.concat([pooled_output, start_pos_vector, end_pos_vector], axis=-1),
+                dropout_prob=dropout_prob),
+            2,
+            activation=utils.get_activation("relu"),
+            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
+        )
 
     return answerable_logits, start_pos_logits, end_pos_logits
