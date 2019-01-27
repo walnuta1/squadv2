@@ -369,6 +369,17 @@ def main():
     out_eval = make_eval_dict(exact_thresh, f1_thresh)
     out_eval_no_na_prob = make_eval_dict(exact_raw, f1_raw)
     merge_eval(out_eval, out_eval_no_na_prob, "NoNaProb")
+    has_ans_pred_has_ans_count = 0
+    no_ans_pred_no_ans_count = 0
+    for k, val in qid_to_has_ans.items():
+        if val and na_probs[k] <= OPTS.na_prob_thresh:
+            has_ans_pred_has_ans_count += 1
+        elif not val and na_probs[k] > OPTS.na_prob_thresh:
+            no_ans_pred_no_ans_count += 1
+    merge_eval(out_eval, collections.OrderedDict([
+        ('HasAnswerAccuracy', float(has_ans_pred_has_ans_count) / len(has_ans_qids)),
+        ('NoAnswerAccuracy', float(no_ans_pred_no_ans_count) / len(no_ans_qids))
+    ]), "Answerability")
     if has_ans_qids:
         has_ans_eval = make_eval_dict(exact_thresh, f1_thresh, qid_list=has_ans_qids)
         has_ans_eval_no_na_prob = make_eval_dict(exact_raw, f1_raw, qid_list=has_ans_qids)

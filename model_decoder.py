@@ -68,7 +68,7 @@ def squad_v2_decoder(
     # position logits
     with tf.variable_scope("end_pos"):
         end_pos_vector = tf.layers.dense(
-            utils.dropout(tf.concat([pooled_output, start_pos_vector], axis=-1),\
+            utils.dropout(tf.concat([pooled_output, start_pos_logits], axis=-1),\
                             dropout_prob=dropout_prob),
             embedding_size,
             activation=utils.get_activation("relu"),
