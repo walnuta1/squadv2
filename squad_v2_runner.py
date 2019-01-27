@@ -131,7 +131,7 @@ tf.flags.DEFINE_string(
     "Initial checkpoint (usually from a pre-trained BERT model).")
 
 tf.flags.DEFINE_float(
-    "answerability_weight", 10.0,
+    "answerability_weight", 1.0,
     "The relative weight of the answerability loss vs positional losses"
 )
 
@@ -304,18 +304,14 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
             return loss, tf.argmax(log_probs, axis=-1, output_type=tf.int32)
 
         answerable_loss, _ = compute_loss(answerable_logits, is_impossible, 2)
-        start_pos_loss, start_pos_predict = compute_loss(
+        start_pos_loss, _ = compute_loss(
             start_pos_logits, start_position, seq_length)
-        end_pos_loss, end_pos_predict = compute_loss(end_pos_logits, end_position, seq_length)
-        zero_tensor = tf.zeros_like(start_pos_predict)
-        pos_prediction_loss = tf.reduce_sum(
-            tf.maximum(start_pos_predict - end_pos_predict, zero_tensor), axis=-1)
+        end_pos_loss, _ = compute_loss(end_pos_logits, end_position, seq_length)
 
-        total_loss = FLAGS.answerability_weight * answerable_loss + \
-            (1.0 - tf.cast(is_impossible, tf.float32)) * ( \
-                start_pos_loss + end_pos_loss + \
-                FLAGS.prediction_error_weight * tf.cast(pos_prediction_loss, tf.float32) \
-            )
+        total_loss = math.log(FLAGS.max_seq_length / 2.0) \
+                    * FLAGS.answerability_weight * answerable_loss + \
+            (1.0 - tf.cast(is_impossible, tf.float32)) * \
+                (start_pos_loss + end_pos_loss)
         final_total_loss = tf.reduce_mean(total_loss)
 
         train_op = optimization.create_optimizer(
