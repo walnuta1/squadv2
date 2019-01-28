@@ -47,9 +47,6 @@ def squad_v2_decoder(
         answerable_weights = tf.get_variable(
             "weights", [1, 1, embedding_size],
             initializer=tf.truncated_normal_initializer(stddev=0.02))
-        answerable_offset = tf.get_variable(
-            "offset", [1, 1],
-            initializer=tf.zeros_initializer())
         answerable_weights_expanded = tf.add(
             answerable_weights,
             tf.zeros([batch_size, 1, embedding_size], dtype=tf.float32)
@@ -58,9 +55,7 @@ def squad_v2_decoder(
             answerable_weights_expanded, sequence_output, sequence_output, None,
             hidden_size=embedding_size, head_count=1
         )
-        answerable_vector = tf.add(
-            tf.reshape(answerable_attn, [batch_size, embedding_size]),
-            answerable_offset)
+        answerable_vector = tf.reshape(answerable_attn, [batch_size, embedding_size])
         answerable_logits = tf.layers.dense(
             answerable_vector,
             2,
