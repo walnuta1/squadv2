@@ -54,7 +54,7 @@ def squad_v2_decoder(
             answerable_weights,
             tf.zeros([batch_size, 1, embedding_size], dtype=tf.float32)
         )
-        answerable_attn = transformer.multiheaded_attention_no_transform(
+        answerable_attn, _ = transformer.multiheaded_attention_no_transform(
             answerable_weights_expanded, sequence_output, sequence_output, None,
             hidden_size=embedding_size, head_count=1
         )
