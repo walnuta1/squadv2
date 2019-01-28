@@ -4,6 +4,7 @@ A question and answer decoder model.
 import tensorflow as tf
 
 import utils
+import transformer
 
 def squad_v2_decoder(
         sequence_output,
@@ -42,12 +43,17 @@ def squad_v2_decoder(
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
-        answerable_vector = tf.layers.dense(
-            utils.dropout(pooled_output, dropout_prob=dropout_prob),
-            embedding_size,
-            activation=utils.get_activation("relu"),
-            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
+        answerable_weights = tf.get_variable(
+            "weights", [1, embedding_size],
+            initializer=tf.truncated_normal_initializer(stddev=0.02))
+        answerable_offset = tf.get_variable(
+            "offset", [1, 1],
+            initializer=tf.zeros_initializer())
+        answerable_attn = transformer.multiheaded_attention_no_transform(
+            answerable_weights, sequence_output, sequence_output, None,
+            hidden_size=embedding_size, head_count=1
         )
+        answerable_vector = tf.add(answerable_attn, answerable_offset)
         answerable_logits = tf.layers.dense(
             answerable_vector,
             2,

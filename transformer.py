@@ -242,3 +242,81 @@ def create_attention_mask_from_input_mask(from_tensor, to_mask):
     mask = broadcast_ones * to_mask
 
     return mask
+
+def multiheaded_attention_no_transform(
+        query, key, value, mask, \
+        hidden_size=512, \
+        head_count=12, \
+        dropout_prob=0.1 \
+        ):
+    """
+    This is an implementation of multiheaded attention mechanism described
+    in the "Attention is all you need" paper but without projections.
+
+    The shape of query, key & value is (batch_size, seq_length, model_size).
+    query and key can have different seq_length while key and value are
+    assumed to have the same sequence_length.
+
+    Args:
+    query, key, value: the respective attention vectors.
+    mask: of shape [batch_size, seq_length, seq_length].
+    embedding_size: the dimension of the input tensor embedding
+    hidden_size: the size of the model after projection for attention
+    head_count: the number of parallel attention count.
+    dropout_prob: the dropout probabililyt to apply for attention.
+    """
+    query_shape = query.shape.as_list()
+    key_shape = key.shape.as_list()
+    batch_size = tf.shape(query)[0]  # batch_size is a dynamic shape param
+    query_seq_len = query_shape[1]
+    key_seq_len = key_shape[1]
+    assert hidden_size % head_count == 0
+    size_per_head = hidden_size // head_count
+
+    # Transform tensors to be of shape in order:
+    # (batch_size, head_count, size_per_head, per_head_model_size)
+    def transform_for_multihead(input_tensor, batch_size,
+                                num_attention_heads, seq_length, width):
+        output_tensor = tf.reshape(
+            input_tensor, [batch_size, seq_length, num_attention_heads, width])
+        output_tensor = tf.transpose(output_tensor, [0, 2, 1, 3])
+        return output_tensor
+
+    query_transformed = transform_for_multihead(
+        query, batch_size, head_count, query_seq_len, size_per_head)
+    key_transformed = transform_for_multihead(
+        key, batch_size, head_count, key_seq_len, size_per_head)
+    value_transformed = transform_for_multihead(
+        value, batch_size, head_count, key_seq_len, size_per_head)
+
+    # Compute scaled dot product
+    attention_scores = tf.matmul(
+        query_transformed, key_transformed, transpose_b=True)
+    attention_scores = tf.multiply(
+        attention_scores, 1.0 / math.sqrt(float(size_per_head)))
+
+    # Apply mask
+    if mask is not None:
+        # Add a dimension after batch_size to represent heads
+        mask = tf.expand_dims(mask, axis=[1])
+        # The original masks have 1 for valid positions and 0 for
+        # invalid positions, the transformed adder would have
+        # value 0 for valid position and -10000 for invalid positions.
+        adder = (1.0 - tf.cast(mask, tf.float32)) * (-10000.0)
+        attention_scores += adder
+
+    # Normalize attention scores to probabilities, perform dropout
+    attention_prob = tf.nn.softmax(attention_scores)
+    attention_prob = utils.dropout(attention_prob, dropout_prob=dropout_prob)
+
+    # Compute the attended values and transform it back to
+    # the original shape
+    value_after_attention = tf.matmul(attention_prob, value_transformed)
+    value_after_attention_orig = tf.transpose(
+        value_after_attention, [0, 2, 1, 3])
+    value_after_attention_orig = tf.reshape(
+        value_after_attention_orig, [batch_size, query_seq_len, hidden_size])
+
+    # return the result with a final linear projection, along with
+    # attention probabilities
+    return value_after_attention_orig, attention_prob
