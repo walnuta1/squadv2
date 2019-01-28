@@ -34,6 +34,7 @@ def squad_v2_decoder(
     """
     adder = (1.0 - tf.cast(input_mask, tf.float32)) * \
             (1.0 - tf.cast(segment_ids, tf.float32)) * -10000.0
+    batch_size = tf.shape(sequence_output)[0] # use dynamic shape for batch_size
 
     # First get the pooler output
     with tf.variable_scope("pooler"):
@@ -44,16 +45,22 @@ def squad_v2_decoder(
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
         answerable_weights = tf.get_variable(
-            "weights", [1, embedding_size],
+            "weights", [1, 1, embedding_size],
             initializer=tf.truncated_normal_initializer(stddev=0.02))
         answerable_offset = tf.get_variable(
             "offset", [1, 1],
             initializer=tf.zeros_initializer())
+        answerable_weights_expanded = tf.add(
+            answerable_weights,
+            tf.zeros([batch_size, 1, embedding_size], dtype=tf.float32)
+        )
         answerable_attn = transformer.multiheaded_attention_no_transform(
-            answerable_weights, sequence_output, sequence_output, None,
+            answerable_weights_expanded, sequence_output, sequence_output, None,
             hidden_size=embedding_size, head_count=1
         )
-        answerable_vector = tf.add(answerable_attn, answerable_offset)
+        answerable_vector = tf.add(
+            tf.reshape(answerable_attn, [batch_size, embedding_size]),
+            answerable_offset)
         answerable_logits = tf.layers.dense(
             answerable_vector,
             2,
