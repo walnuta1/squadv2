@@ -310,7 +310,7 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
 
         total_loss = math.log(FLAGS.max_seq_length / 2.0) \
                     * FLAGS.answerability_weight * answerable_loss + \
-                    (start_pos_loss + end_pos_loss)
+                    (start_pos_loss + end_pos_loss) * (1.0 - tf.cast(is_impossible, tf.float32))
         final_total_loss = tf.reduce_mean(total_loss)
 
         train_op = optimization.create_optimizer(
