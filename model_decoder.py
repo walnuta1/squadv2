@@ -11,6 +11,7 @@ def squad_v2_decoder(
         input_mask,
         segment_ids,
         embedding_size=768,
+        num_attention_heads=12,
         dropout_prob=0.1,
         initializer_range=0.2
     ):
@@ -47,13 +48,21 @@ def squad_v2_decoder(
         answerable_weights = tf.get_variable(
             "weights", [1, 1, embedding_size],
             initializer=tf.truncated_normal_initializer(stddev=0.02))
+        answerable_offsets = tf.get_variable(
+            "offsets", [1, 1, num_attention_heads],
+            initializer=tf.truncated_normal_initializer(stddev=0.02))
         answerable_weights_expanded = tf.add(
             answerable_weights,
             tf.zeros([batch_size, 1, embedding_size], dtype=tf.float32)
         )
+        answerable_offsets_expanded = tf.add(
+            answerable_offsets,
+            tf.zeros([batch_size, 1, num_attention_heads], dtype=tf.float32)
+        )
         answerable_attn, _ = transformer.multiheaded_attention_no_transform(
             answerable_weights_expanded, sequence_output, sequence_output, None,
-            hidden_size=embedding_size, head_count=1
+            answerable_offsets_expanded,
+            hidden_size=embedding_size, head_count=num_attention_heads
         )
         answerable_vector = tf.reshape(answerable_attn, [batch_size, embedding_size])
         answerable_logits = tf.layers.dense(
