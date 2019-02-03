@@ -49,8 +49,8 @@ def squad_v2_decoder(
             pooled_output,
             embedding_size,
             activation=utils.get_activation("sigmoid"),
-            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range),
-            bias_initializer=tf.constant_initializer(-10.0)
+            kernel_initializer=tf.zeros_initializer(),
+            bias_initializer=tf.constant_initializer(-1.0)
         )
         pooled_output = pooled_output * (1.0 - hw_tgate) + hw_value * hw_tgate
 
