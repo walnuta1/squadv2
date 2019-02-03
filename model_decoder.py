@@ -42,8 +42,14 @@ def squad_v2_decoder(
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
-        answerable_logits = tf.layers.dense(
+        answerable_vector = tf.layers.dense(
             pooled_output,
+            embedding_size,
+            activation=utils.get_activation("relu"),
+            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
+        )
+        answerable_logits = tf.layers.dense(
+            answerable_vector,
             2,
             activation=utils.get_activation("relu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
