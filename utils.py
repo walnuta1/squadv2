@@ -69,6 +69,8 @@ def get_activation(activation_string):
         return gelu
     elif act == "tanh":
         return tf.tanh
+    elif act == "sigmoid":
+        return tf.sigmoid
     else:
         raise ValueError("Unsupported activation: %s" % act)
 
