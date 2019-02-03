@@ -244,7 +244,7 @@ def create_attention_mask_from_input_mask(from_tensor, to_mask):
     return mask
 
 def multiheaded_attention_no_transform(
-        query, key, value, mask, offsets, \
+        query, key, value, mask, \
         hidden_size=512, \
         head_count=12, \
         dropout_prob=0.1 \
@@ -293,15 +293,12 @@ def multiheaded_attention_no_transform(
         key, batch_size, head_count, key_seq_len, size_per_head)
     value_transformed = transform_for_multihead(
         value, batch_size, head_count, key_seq_len, size_per_head)
-    offsets_transformed = transform_for_multihead(
-        offsets, batch_size, head_count, query_seq_len, 1)
 
     # Compute scaled dot product
     attention_scores = tf.matmul(
         query_transformed, key_transformed, transpose_b=True)
     attention_scores = tf.multiply(
         attention_scores, 1.0 / math.sqrt(float(size_per_head)))
-    attention_scores = tf.add(attention_scores, offsets_transformed)
 
     # Apply mask
     if mask is not None:

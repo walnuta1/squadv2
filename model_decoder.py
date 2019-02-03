@@ -4,14 +4,12 @@ A question and answer decoder model.
 import tensorflow as tf
 
 import utils
-import transformer
 
 def squad_v2_decoder(
         sequence_output,
         input_mask,
         segment_ids,
         embedding_size=768,
-        num_attention_heads=12,
         dropout_prob=0.1,
         initializer_range=0.2
     ):
@@ -35,7 +33,6 @@ def squad_v2_decoder(
     """
     adder = (1.0 - tf.cast(input_mask, tf.float32)) * \
             (1.0 - tf.cast(segment_ids, tf.float32)) * -10000.0
-    batch_size = tf.shape(sequence_output)[0] # use dynamic shape for batch_size
 
     # First get the pooler output
     with tf.variable_scope("pooler"):
@@ -45,28 +42,8 @@ def squad_v2_decoder(
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
-        answerable_weights = tf.get_variable(
-            "weights", [1, 1, embedding_size],
-            initializer=tf.truncated_normal_initializer(stddev=0.02))
-        answerable_offsets = tf.get_variable(
-            "offsets", [1, 1, num_attention_heads],
-            initializer=tf.truncated_normal_initializer(stddev=0.02))
-        answerable_weights_expanded = tf.add(
-            answerable_weights,
-            tf.zeros([batch_size, 1, embedding_size], dtype=tf.float32)
-        )
-        answerable_offsets_expanded = tf.add(
-            answerable_offsets,
-            tf.zeros([batch_size, 1, num_attention_heads], dtype=tf.float32)
-        )
-        answerable_attn, _ = transformer.multiheaded_attention_no_transform(
-            answerable_weights_expanded, sequence_output, sequence_output, None,
-            answerable_offsets_expanded,
-            hidden_size=embedding_size, head_count=num_attention_heads
-        )
-        answerable_vector = tf.reshape(answerable_attn, [batch_size, embedding_size])
         answerable_logits = tf.layers.dense(
-            answerable_vector,
+            pooled_output,
             2,
             activation=utils.get_activation("relu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
@@ -76,7 +53,7 @@ def squad_v2_decoder(
     # produce the start positional logits
     with tf.variable_scope("start_pos"):
         start_pos_vector = tf.layers.dense(
-            utils.dropout(tf.concat([pooled_output, answerable_vector], axis=-1),
+            utils.dropout(tf.concat([pooled_output, answerable_logits], axis=-1),
                           dropout_prob=dropout_prob),
             embedding_size,
             activation=utils.get_activation("relu"),
@@ -92,7 +69,7 @@ def squad_v2_decoder(
     # position logits
     with tf.variable_scope("end_pos"):
         end_pos_vector = tf.layers.dense(
-            utils.dropout(tf.concat([pooled_output, answerable_vector, start_pos_vector], axis=-1),
+            utils.dropout(tf.concat([pooled_output, answerable_logits, start_pos_logits], axis=-1),
                           dropout_prob=dropout_prob),
             embedding_size,
             activation=utils.get_activation("relu"),

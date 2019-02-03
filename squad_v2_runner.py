@@ -250,7 +250,6 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
         input_mask,
         segment_ids,
         embedding_size=FLAGS.embedding_size,
-        num_attention_heads=FLAGS.num_attention_heads,
         dropout_prob=dropout_prob,
         initializer_range=FLAGS.initializer_range
     )
