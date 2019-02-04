@@ -4,6 +4,7 @@ A question and answer decoder model.
 import tensorflow as tf
 
 import utils
+import highway
 
 def squad_v2_decoder(
         sequence_output,
@@ -39,20 +40,7 @@ def squad_v2_decoder(
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token. We assume that this has been pre-trained
         pooled_output = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
-        hw_value = tf.layers.dense(
-            pooled_output,
-            embedding_size,
-            activation=utils.get_activation("relu"),
-            kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
-        )
-        hw_tgate = tf.layers.dense(
-            pooled_output,
-            embedding_size,
-            activation=utils.get_activation("sigmoid"),
-            kernel_initializer=tf.zeros_initializer(),
-            bias_initializer=tf.constant_initializer(-1.0)
-        )
-        pooled_output = pooled_output * (1.0 - hw_tgate) + hw_value * hw_tgate
+        pooled_output = highway.highway(pooled_output, embedding_size, carry_offset=-2.0)
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
@@ -61,6 +49,12 @@ def squad_v2_decoder(
             embedding_size,
             activation=utils.get_activation("relu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
+        )
+        answerable_vector = highway.multi_highway(
+            2,
+            answerable_vector,
+            embedding_size,
+            carry_offset=-1.0
         )
         answerable_logits = tf.layers.dense(
             answerable_vector,
