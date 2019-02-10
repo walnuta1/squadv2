@@ -40,7 +40,6 @@ def squad_v2_decoder(
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token. We assume that this has been pre-trained
         pooled_output = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
-        pooled_output = highway.highway(pooled_output, embedding_size, carry_offset=-2.0)
 
     # Predict answerability from the pooler output
     with tf.variable_scope("answerable"):
