@@ -311,6 +311,7 @@ def model_function(features, labels, mode, params):    # pylint: disable=unused-
         total_loss = math.log(FLAGS.max_seq_length / 2.0) \
                     * FLAGS.answerability_weight * answerable_loss + \
                     (start_pos_loss + end_pos_loss) * (1.0 - tf.cast(is_impossible, tf.float32))
+        total_loss = answerable_loss  # Experiment for answerability only for now
         final_total_loss = tf.reduce_mean(total_loss)
 
         train_op = optimization.create_optimizer(
@@ -371,7 +372,7 @@ def input_fn_builder(input_file, seq_length, is_training, drop_remainder):
         for name in list(example.keys()):
             var_t = example[name]
             if var_t.dtype == tf.int64:
-                var_t = tf.to_int32(var_t)
+                var_t = tf.cast(var_t, tf.int32)
             example[name] = var_t
 
         return example
