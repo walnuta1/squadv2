@@ -49,12 +49,6 @@ def squad_v2_decoder(
             activation=utils.get_activation("relu"),
             kernel_initializer=tf.truncated_normal_initializer(stddev=initializer_range)
         )
-        answerable_vector = highway.multi_highway(
-            2,
-            answerable_vector,
-            embedding_size,
-            carry_offset=-1.0
-        )
         answerable_logits = tf.layers.dense(
             answerable_vector,
             2,
